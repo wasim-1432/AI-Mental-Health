@@ -1,8 +1,7 @@
 # backend/config.py - FINAL SECURE VERSION
 import os
 from dotenv import load_dotenv
-
-load_dotenv() # .env file se key lega
+load_dotenv()
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
