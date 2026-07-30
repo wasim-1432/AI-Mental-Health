@@ -1,55 +1,39 @@
-#Step 1: Setup Ollama with Medgemma tool
-import ollama
+# backend/tools.py - RENDER READY (No Ollama)
+import os
+# FIX: dot wala import
+from .config import TWILIO_ACCOUNT_SID, TWILIO_FROM_NUMBER, TWILIO_AUTH_TOKEN, EMERGENCY_CONTACT, GROQ_API_KEY
 
+# MedGemma ka kaam ab Groq se hoga, Render par Ollama nahi chalta
 def query_medgemma(prompt: str) -> str:
     """
-    Calls MedGemma model with a therapist personality profile.
-    Returns responses as an empathic mental health professional.
+    Calls Groq with Dr. Emily Hartman personality.
     """
     system_prompt = """You are Dr. Emily Hartman, a warm and experienced clinical psychologist. 
-    Respond to patients with:
-
-    1. Emotional attunement ("I can sense how difficult this must be...")
-    2. Gentle normalization ("Many people feel this way when...")
-    3. Practical guidance ("What sometimes helps is...")
-    4. Strengths-focused support ("I notice how you're...")
-
-    Key principles:
-    - Never use brackets or labels
-    - Blend elements seamlessly
-    - Vary sentence structure
-    - Use natural transitions
-    - Mirror the user's language level
-    - Always keep the conversation going by asking open ended questions to dive into the root cause of patients problem
+    Respond with: 1. Emotional attunement 2. Gentle normalization 3. Practical guidance 4. Strengths-focused support
+    Never use brackets or labels. Always ask open ended questions to dive into root cause.
     """
-    
     try:
-        response = ollama.chat(
-            model='medgemma:4b',
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            options={
-                'num_predict': 350,  # Slightly higher for structured responses
-                'temperature': 0.7,  # Balanced creativity/accuracy
-                'top_p': 0.9        # For diverse but relevant responses
-            }
-        )
-        return response['message']['content'].strip()
+        from langchain_groq import ChatGroq
+        llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7, api_key=GROQ_API_KEY)
+        response = llm.invoke(f"{system_prompt}\n\nPatient says: {prompt}")
+        return response.content.strip()
     except Exception as e:
-        return f"I'm having technical difficulties, but I want you to know your feelings matter. Please try again shortly."
+        print(f"MedGemma Error: {e}")
+        return f"I can sense this is difficult for you. Could you share more about what you're feeling right now?"
 
-#step 2: Setup Twilio calling API tool
-from twilio.rest import Client
-from config import TWILIO_ACCOUNT_SID,TWILIO_FROM_NUMBER,TWILIO_AUTH_TOKEN,EMERGENCY_CONTACT
+# Twilio calling tool
 def call_emergency():
-    client=Client(TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN)
-    call=client.calls.create(
-        to=EMERGENCY_CONTACT,
-        from_=TWILIO_FROM_NUMBER,
-        url="https://demo.twilio.com/docs/voice.xml"
-    )
-
-
-#Setp 3: Setup location tool
+    try:
+        from twilio.rest import Client
+        if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, EMERGENCY_CONTACT]):
+            print("Twilio keys missing, skipping call")
+            return
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        call = client.calls.create(
+            to=EMERGENCY_CONTACT,
+            from_=TWILIO_FROM_NUMBER,
+            url="https://demo.twilio.com/docs/voice.xml"
+        )
+        print(f"Emergency call placed: {call.sid}")
+    except Exception as e:
+        print(f"Twilio error: {e}")
