@@ -79,10 +79,11 @@ async def ask(query: Query):
             "answer": f"Backend error: {str(e)}"
         }
 
+# last line aise rakho
 if __name__ == "__main__":
-    # Agar file ka naam main.py hai to "main:app" sahi hai
-    # Agar file ka naam mai.py hai to "mai:app" likhna
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=port)
 
 
 
