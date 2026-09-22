@@ -43,7 +43,7 @@ if not GROQ_API_KEY:
     print("WARNING: GROQ_API_KEY not found in env!")
 
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-120b",
     temperature=0.2,
     api_key=GROQ_API_KEY
 )
